@@ -2,7 +2,7 @@
 The Outlier Detection Notebooks use two prominent algorithms - Isolation Forest and Local Outlier Factor - to detect outliers in a contaminated dataset. Both models are suitable for identifying mislabeled or rare samples when the majority of data is presumed to be clean.
 
 ## Configurable Outlier Percentage
-Both notebooks include an input cell where the user can define the estimated percentage of outliers in the dataset. This value is passed to the `contamination` parameter of the respective models:
+Both notebooks include an input cell where the user can define the estimated `percentage` of outliers in the dataset. This value is passed to the `contamination` parameter of the respective models:
 
   * In Isolation Forest, it defines the expected proportion of anomalies in the dataset.
 
