@@ -45,8 +45,9 @@ Learns a model to isolate anomalies by randomly selecting features and split val
 Samples that are easier to isolate (i.e., require fewer splits) are more likely to be outliers.
 
 ```python
-clf = LocalOutlierFactor(n_neighbors=20, contamination= contamination/100)
+clf = IsolationForest(contamination= percentage/100, random_state=42)
 preds = clf.fit_predict(X_pca)
+outlier_indices = np.where(preds == -1)[0]
 ```
 
 Local Outlier Factor (LOF):
@@ -55,7 +56,7 @@ Measures the local density deviation of a given sample compared to its neighbors
 Points in regions of lower density than their neighbors are flagged as outliers.
 
 ```python
-clf = LocalOutlierFactor(n_neighbors=20, contamination=user_contamination)
+lof = LocalOutlierFactor(n_neighbors=20, contamination= percentage / 100)
 preds = clf.fit_predict(X_pca)
 outlier_indices = np.where(preds == -1)[0]
 ```
