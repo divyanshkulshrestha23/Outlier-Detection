@@ -85,6 +85,55 @@ plt.tight_layout()
 plt.show()
 ```
 
-
 The notebook visualizes a subset of flagged outlier images using matplotlib for user inspection.
+
+# Annotation Verification
+
+If you have YOLO-format annotation files, the other two files can work with that data too.
+
+## How YOLO Patch Extraction Works
+
+Patches from full-sized images using YOLO-format annotation files serve as the input units for anomaly detection, allowing the model to identify suspicious or unusual object instances, rather than evaluating entire images.
+
+### 1. Image and Annotation Matching
+The script first scans the images/ and labels/ directories and matches image files (e.g., sample1.jpg) with their corresponding annotation files (e.g., sample1.txt). Each annotation file is expected to follow the YOLO format, where each line represents a single object using five fields:
+
+```php
+<class_id> <x_center> <y_center> <width> <height>
+```
+All coordinates are normalized between 0 and 1 with respect to the image dimensions.
+
+### 2. Conversion to Pixel Coordinates
+For each object in the annotation file, the normalized bounding box coordinates are converted into actual pixel values using the image’s width and height. This step calculates the top-left (x1, y1) and bottom-right (x2, y2) corners of the bounding box:
+
+```python
+x1 = int((cx - bw / 2) * image_width)
+y1 = int((cy - bh / 2) * image_height)
+x2 = int((cx + bw / 2) * image_width)
+y2 = int((cy + bh / 2) * image_height)
+```
+
+### 3. Patch Extraction and Filtering
+Using the computed coordinates, the image is sliced to extract a rectangular patch corresponding to the object. Patches that are too small (e.g., less than 10×10 pixels) are discarded, as they typically do not contain meaningful visual information and may introduce noise into the model.
+
+Each valid patch is then resized to a standard input size (e.g., 224×224 pixels) to match the expected dimensions for CNN feature extraction.
+
+### 4. Preprocessing for CNN Feature Extraction
+Each resized patch undergoes preprocessing using preprocess_input() from Keras (specific to the CNN model being used, such as MobileNetV2). This ensures pixel values are properly scaled and formatted. The preprocessed patch is converted into a NumPy array and passed to the CNN model to extract high-level feature representations.
+
+
+### 5. Metadata Tracking
+For every patch extracted, the script stores metadata including the image path and bounding box coordinates. This information is used later to match detected outlier patches back to their original image and location and visualize the patch in the final output.
+
+```python
+patch = img[y1:y2, x1:x2]
+if patch.shape[0] < min_patch_size or patch.shape[1] < min_patch_size:
+  continue
+patch_resized = cv2.resize(patch, resize_dim)
+patch_array = preprocess_input(img_to_array(patch_resized))
+patch_array = np.expand_dims(patch_array, axis=0)
+features = cnn_model.predict(patch_array, verbose=0).flatten()
+patch_features.append(features)
+patch_info.append((img_path, (x1, y1, x2, y2)))
+```
 
